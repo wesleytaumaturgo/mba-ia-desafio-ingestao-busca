@@ -101,14 +101,24 @@ ${GATE}
 
 # --- Criar PR ---
 log_info "Criando PR..."
-PR_URL=$(gh pr create \
+PR_OUTPUT=$(gh pr create \
   --title "$TITLE" \
   --body "$PR_BODY" \
   --base "$BASE_BRANCH" \
-  --head "$BRANCH_ATUAL" \
-  2>&1) || die "Falha ao criar PR. Verifique: gh auth status"
+  --head "$BRANCH_ATUAL" 2>&1)
+PR_EXIT=$?
 
-log_ok "PR criado: $PR_URL"
+if [[ $PR_EXIT -ne 0 ]]; then
+  PR_URL=$(gh pr list --head "$BRANCH_ATUAL" --base "$BASE_BRANCH" --state open --json url -q '.[0].url' 2>/dev/null || true)
+  if [[ -n "$PR_URL" ]]; then
+    log_ok "PR ja existe: $PR_URL"
+  else
+    die "Falha ao criar PR: $PR_OUTPUT"
+  fi
+else
+  PR_URL="$PR_OUTPUT"
+  log_ok "PR criado: $PR_URL"
+fi
 
 # --- Proxima fase (se fase < 4) ---
 if [[ $PHASE -lt 4 ]]; then
