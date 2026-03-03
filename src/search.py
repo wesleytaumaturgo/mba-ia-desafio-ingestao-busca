@@ -1,29 +1,40 @@
-PROMPT_TEMPLATE = """
-CONTEXTO:
-{contexto}
-
-REGRAS:
-- Responda somente com base no CONTEXTO.
-- Se a informação não estiver explicitamente no CONTEXTO, responda:
-  "Não tenho informações necessárias para responder sua pergunta."
-- Nunca invente ou use conhecimento externo.
-- Nunca produza opiniões ou interpretações além do que está escrito.
-
-EXEMPLOS DE PERGUNTAS FORA DO CONTEXTO:
-Pergunta: "Qual é a capital da França?"
-Resposta: "Não tenho informações necessárias para responder sua pergunta."
-
-Pergunta: "Quantos clientes temos em 2024?"
-Resposta: "Não tenho informações necessárias para responder sua pergunta."
-
-Pergunta: "Você acha isso bom ou ruim?"
-Resposta: "Não tenho informações necessárias para responder sua pergunta."
-
-PERGUNTA DO USUÁRIO:
-{pergunta}
-
-RESPONDA A "PERGUNTA DO USUÁRIO"
 """
+Módulo de busca semântica no pgVector.
+Conecta ao banco vetorial e retorna os chunks mais relevantes para uma query.
+"""
+from dotenv import load_dotenv
+from langchain_openai import OpenAIEmbeddings
+from langchain_postgres import PGVector
 
-def search_prompt(question=None):
-    pass
+# Alternativa Google (descomente para usar):
+# from langchain_google_genai import GoogleGenerativeAIEmbeddings
+
+load_dotenv()
+
+CONNECTION_STRING = "postgresql+psycopg://langchain:langchain@localhost:5432/langchain"
+COLLECTION_NAME = "documents"
+
+embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+# embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+
+vector_store = PGVector(
+    embeddings=embeddings,
+    connection=CONNECTION_STRING,
+    collection_name=COLLECTION_NAME,
+)
+
+
+def search(query: str, k: int = 10):
+    """Busca os k documentos mais relevantes para a query.
+    Retorna List[Tuple[Document, float]]. Score menor = mais relevante (distância cosseno).
+    """
+    results = vector_store.similarity_search_with_score(query, k=k)
+    return results
+
+
+if __name__ == "__main__":
+    query = input("Digite sua busca: ")
+    results = search(query)
+    for doc, score in results:
+        print(f"\n[Score: {score:.4f}]")
+        print(doc.page_content[:200])
