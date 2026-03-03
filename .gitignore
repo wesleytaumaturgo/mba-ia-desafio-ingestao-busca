@@ -6,3 +6,10 @@ __pycache__/
 .vscode/
 scripts/
 .venv
+.codex/
+.claude/
+.gemini/
+.cursor/
+.docs/
+playbook.md
+desafio.md

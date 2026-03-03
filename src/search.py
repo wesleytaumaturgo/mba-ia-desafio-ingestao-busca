@@ -1,29 +1,34 @@
-PROMPT_TEMPLATE = """
-CONTEXTO:
-{contexto}
+from dotenv import load_dotenv
+from langchain_openai import OpenAIEmbeddings
+from langchain_postgres import PGVector
 
-REGRAS:
-- Responda somente com base no CONTEXTO.
-- Se a informação não estiver explicitamente no CONTEXTO, responda:
-  "Não tenho informações necessárias para responder sua pergunta."
-- Nunca invente ou use conhecimento externo.
-- Nunca produza opiniões ou interpretações além do que está escrito.
+load_dotenv()
 
-EXEMPLOS DE PERGUNTAS FORA DO CONTEXTO:
-Pergunta: "Qual é a capital da França?"
-Resposta: "Não tenho informações necessárias para responder sua pergunta."
+CONNECTION_STRING = "postgresql+psycopg://langchain:langchain@localhost:5432/langchain"
+COLLECTION_NAME = "documents"
 
-Pergunta: "Quantos clientes temos em 2024?"
-Resposta: "Não tenho informações necessárias para responder sua pergunta."
+# Alternativa Google (descomente para usar):
+# from langchain_google_genai import GoogleGenerativeAIEmbeddings
+# embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
-Pergunta: "Você acha isso bom ou ruim?"
-Resposta: "Não tenho informações necessárias para responder sua pergunta."
+embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 
-PERGUNTA DO USUÁRIO:
-{pergunta}
+vector_store = PGVector(
+    embeddings=embeddings,
+    connection=CONNECTION_STRING,
+    collection_name=COLLECTION_NAME,
+)
 
-RESPONDA A "PERGUNTA DO USUÁRIO"
-"""
 
-def search_prompt(question=None):
-    pass
+def search(query: str, k: int = 10):
+    """Busca os k documentos mais relevantes para a query."""
+    results = vector_store.similarity_search_with_score(query, k=k)
+    return results
+
+
+if __name__ == "__main__":
+    query = input("Digite sua busca: ")
+    results = search(query)
+    for doc, score in results:
+        print(f"\n[Score: {score:.4f}]")
+        print(doc.page_content[:200])
