@@ -39,7 +39,7 @@ declare -A GATES
 GATES[0]="docker compose ps + python -c 'import langchain'"
 GATES[1]="Explicar RAG em 3 frases"
 GATES[2]="python src/ingest.py + SELECT count(*) FROM langchain_pg_embedding"
-GATES[3]="python -m src.chat — responde no contexto e rejeita fora"
+GATES[3]="python src/chat.py — responde no contexto e rejeita fora"
 GATES[4]="Validacao E2E completa + git push origin main"
 
 # --- Validar argumento ---
