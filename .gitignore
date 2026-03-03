@@ -10,4 +10,5 @@ scripts/
 .claude/
 .gemini/
 .cursor/
+.docs/
 playbook.md
