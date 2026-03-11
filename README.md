@@ -161,3 +161,5 @@ Certifique-se de que o `.env` contém `GOOGLE_API_KEY` preenchido.
 ├── document.pdf           # PDF para ingestão
 └── README.md
 ```
+
+> Projeto desenvolvido como parte do MBA Engenharia de Software com IA — Full Cycle.
