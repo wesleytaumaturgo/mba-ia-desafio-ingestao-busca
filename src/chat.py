@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from dotenv import load_dotenv
 load_dotenv()
 
-from src.search import search_prompt
+from src.search import search_prompt, _get_vectorstore
 
 
 def _get_llm():
@@ -18,7 +18,11 @@ def _get_llm():
 
 
 def main():
-    chain = search_prompt()
+    try:
+        chain = _get_vectorstore()
+    except Exception as e:
+        print(f"Não foi possível iniciar o chat. Verifique os erros de inicialização: {e}")
+        return
 
     if not chain:
         print("Não foi possível iniciar o chat. Verifique os erros de inicialização.")
@@ -34,9 +38,12 @@ def main():
         if not query:
             continue
 
-        prompt_text = search_prompt(query)
-        response = llm.invoke(prompt_text)
-        print(f"\nResposta: {response.content}")
+        try:
+            prompt_text = search_prompt(query)
+            response = llm.invoke(prompt_text)
+            print(f"\nResposta: {response.content}")
+        except Exception as e:
+            print(f"\n[Erro] {e}")
 
     print("Chat encerrado.")
 

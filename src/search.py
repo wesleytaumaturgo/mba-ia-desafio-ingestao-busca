@@ -1,3 +1,11 @@
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+COLLECTION_NAME = os.getenv("PG_VECTOR_COLLECTION_NAME", "documents")
+
 PROMPT_TEMPLATE = """
 CONTEXTO:
 {contexto}
@@ -25,13 +33,7 @@ PERGUNTA DO USUÁRIO:
 RESPONDA A "PERGUNTA DO USUÁRIO"
 """
 
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
-DATABASE_URL = os.getenv("DATABASE_URL")
-COLLECTION_NAME = os.getenv("PG_VECTOR_COLLECTION_NAME", "documents")
+_vectorstore = None
 
 
 def _get_embeddings():
@@ -46,22 +48,19 @@ def _get_embeddings():
 
 
 def _get_vectorstore():
-    from langchain_postgres import PGVector
-    embeddings = _get_embeddings()
-    return PGVector(
-        embeddings=embeddings,
-        collection_name=COLLECTION_NAME,
-        connection=DATABASE_URL,
-    )
+    global _vectorstore
+    if _vectorstore is None:
+        from langchain_postgres import PGVector
+        _vectorstore = PGVector(
+            embeddings=_get_embeddings(),
+            collection_name=COLLECTION_NAME,
+            connection=DATABASE_URL,
+        )
+    return _vectorstore
 
 
-def search_prompt(question=None):
+def search_prompt(question: str) -> str:
     vectorstore = _get_vectorstore()
-
-    if question is None:
-        return vectorstore
-
     docs = vectorstore.similarity_search(question, k=3)
-    contexto = "\n\n".join(doc.page_content for doc in docs)
-
+    contexto = "\n\n".join(doc.page_content for doc in docs) if docs else ""
     return PROMPT_TEMPLATE.format(contexto=contexto, pergunta=question)

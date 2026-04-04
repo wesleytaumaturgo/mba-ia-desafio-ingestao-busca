@@ -20,6 +20,11 @@ def _get_embeddings():
 
 
 def ingest_pdf():
+    if not PDF_PATH:
+        raise ValueError("PDF_PATH não definido no .env")
+    if not DATABASE_URL:
+        raise ValueError("DATABASE_URL não definido no .env")
+
     from langchain_community.document_loaders import PyPDFLoader
     from langchain_text_splitters import RecursiveCharacterTextSplitter
     from langchain_postgres import PGVector
