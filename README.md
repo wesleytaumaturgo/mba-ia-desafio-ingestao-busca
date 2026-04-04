@@ -6,48 +6,69 @@ e responde perguntas com base exclusiva no conteúdo do documento.
 ## Tecnologias
 
 - Python 3.9+
-- LangChain
-- PostgreSQL + pgVector
-- Google Gemini (gemini-2.5-flash-lite + gemini-embedding-001)
-- Docker & Docker Compose
+- LangChain + langchain-postgres (PGVector)
+- PostgreSQL 17 + pgVector
+- Google Gemini (`gemini-embedding-001` + `gemini-2.5-flash-lite`)
+- OpenAI (`text-embedding-3-small` + `gpt-4o-mini`) — alternativa
+- Docker
 
 ## Pré-requisitos
 
-- Docker instalado
+- Docker instalado e rodando
 - Python 3.9+
-- Chave de API do Google Gemini
+- Chave de API do Google Gemini **ou** OpenAI
 
 ## Configuração
+
+### 1. Variáveis de ambiente
 
 ```bash
 cp .env.example .env
 ```
 
-Preencha as variáveis no `.env`:
+Edite o `.env` e preencha obrigatoriamente:
 
-```
-GOOGLE_API_KEY=sua_chave_aqui
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/rag
-PG_VECTOR_COLLECTION_NAME=documents
-PDF_PATH=/caminho/para/document.pdf
+```env
+GOOGLE_API_KEY=sua_chave_aqui          # para usar Gemini (padrão)
+DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/rag
+PDF_PATH=/caminho/absoluto/para/document.pdf
 ```
 
-Instale as dependências:
+> Para usar OpenAI em vez de Gemini, defina `EMBEDDING_PROVIDER=openai` e `OPENAI_API_KEY=sua_chave`.
+
+### 2. Dependências
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Ordem de execução
+### 3. Banco de dados
 
 ```bash
-# 1. Subir o banco
-docker compose up -d
+docker run -d \
+  --name postgres_rag \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=rag \
+  -p 5432:5432 \
+  pgvector/pgvector:pg17
+```
 
-# 2. Ingestão do PDF
+Aguarde o banco subir e habilite a extensão:
+
+```bash
+docker exec postgres_rag psql -U postgres -d rag -c "CREATE EXTENSION IF NOT EXISTS vector;"
+```
+
+> Se preferir usar `docker compose up -d`, o `docker-compose.yml` já inclui o bootstrap da extensão.
+
+## Execução
+
+```bash
+# 1. Ingestão do PDF (chunk_size=1000, chunk_overlap=150)
 PYTHONPATH=. python src/ingest.py
 
-# 3. Chat interativo
+# 2. Chat interativo
 PYTHONPATH=. python src/chat.py
 ```
 
@@ -57,7 +78,7 @@ PYTHONPATH=. python src/chat.py
 Chat RAG iniciado. Digite 'sair' para encerrar.
 
 Pergunta: Qual empresa tem o maior faturamento?
-Resposta: Solar IA Serviços R$ 3.790.111.387,30 1980
+Resposta: Tríade Dados LTDA R$ 3.037.258.594,22 1961
 
 Pergunta: Qual é a capital da França?
 Resposta: Não tenho informações necessárias para responder sua pergunta.
@@ -75,7 +96,17 @@ Chat encerrado.
 ├── .env.example
 ├── document.pdf
 └── src/
-    ├── ingest.py   # carrega PDF, chuna e salva embeddings no pgVector
-    ├── search.py   # busca semântica e formatação do prompt
-    └── chat.py     # loop de chat RAG
+    ├── ingest.py   # carrega PDF, chunka e salva embeddings no pgVector
+    ├── search.py   # busca semântica com score e formatação do prompt
+    └── chat.py     # loop de chat RAG interativo
 ```
+
+## Parâmetros do desafio
+
+| Parâmetro | Valor |
+|---|---|
+| `chunk_size` | 1000 |
+| `chunk_overlap` | 150 |
+| `k` (similarity search) | 10 |
+| Embedding (Gemini) | `gemini-embedding-001` |
+| LLM | `gemini-2.5-flash-lite` |

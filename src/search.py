@@ -61,6 +61,6 @@ def _get_vectorstore():
 
 def search_prompt(question: str) -> str:
     vectorstore = _get_vectorstore()
-    docs = vectorstore.similarity_search(question, k=10)
-    context = "\n\n".join(doc.page_content for doc in docs) if docs else ""
+    results = vectorstore.similarity_search_with_score(question, k=10)
+    context = "\n\n".join(doc.page_content for doc, score in results) if results else ""
     return PROMPT_TEMPLATE.format(context=context, question=question)
