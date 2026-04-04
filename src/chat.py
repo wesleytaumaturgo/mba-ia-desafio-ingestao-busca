@@ -19,13 +19,9 @@ def _get_llm():
 
 def main():
     try:
-        chain = _get_vectorstore()
+        _get_vectorstore()
     except Exception as e:
         print(f"Não foi possível iniciar o chat. Verifique os erros de inicialização: {e}")
-        return
-
-    if not chain:
-        print("Não foi possível iniciar o chat. Verifique os erros de inicialização.")
         return
 
     llm = _get_llm()
