@@ -45,10 +45,10 @@ pip install -r requirements.txt
 docker compose up -d
 
 # 2. Ingestão do PDF
-python src/ingest.py
+PYTHONPATH=. python src/ingest.py
 
 # 3. Chat interativo
-python src/chat.py
+PYTHONPATH=. python src/chat.py
 ```
 
 ## Exemplo de uso
