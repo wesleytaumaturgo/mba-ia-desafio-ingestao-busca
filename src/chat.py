@@ -12,7 +12,7 @@ from src.search import search_prompt, _get_vectorstore
 def _get_llm():
     if os.getenv("GOOGLE_API_KEY"):
         from langchain_google_genai import ChatGoogleGenerativeAI
-        return ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.3)
+        return ChatGoogleGenerativeAI(model="gemini-2.5-flash-lite", temperature=0.3)
     from langchain_openai import ChatOpenAI
     return ChatOpenAI(model="gpt-3.5-turbo", temperature=0.3)
 

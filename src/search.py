@@ -8,7 +8,7 @@ COLLECTION_NAME = os.getenv("PG_VECTOR_COLLECTION_NAME", "documents")
 
 PROMPT_TEMPLATE = """
 CONTEXTO:
-{contexto}
+{context}
 
 REGRAS:
 - Responda somente com base no CONTEXTO.
@@ -28,7 +28,7 @@ Pergunta: "Você acha isso bom ou ruim?"
 Resposta: "Não tenho informações necessárias para responder sua pergunta."
 
 PERGUNTA DO USUÁRIO:
-{pergunta}
+{question}
 
 RESPONDA A "PERGUNTA DO USUÁRIO"
 """
@@ -61,6 +61,6 @@ def _get_vectorstore():
 
 def search_prompt(question: str) -> str:
     vectorstore = _get_vectorstore()
-    docs = vectorstore.similarity_search(question, k=3)
-    contexto = "\n\n".join(doc.page_content for doc in docs) if docs else ""
-    return PROMPT_TEMPLATE.format(contexto=contexto, pergunta=question)
+    docs = vectorstore.similarity_search(question, k=10)
+    context = "\n\n".join(doc.page_content for doc in docs) if docs else ""
+    return PROMPT_TEMPLATE.format(context=context, question=question)
